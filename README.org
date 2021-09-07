@@ -15,7 +15,7 @@ Download el file to your load-path.
     ("C-c a g" . achive-update)
     :custom
     (achive-auto-update t)
-    (achive-update-time 5)
+    (achive-update-seconds 5)
     (achive-language 'zh)
     (achive-stock-list '("sh600036" "sh601012" "sz000625" "sz002050" "sz002013" "sh600176")))
 #+END_SRC

@@ -81,8 +81,8 @@
   :type 'boolean)
 
 
-(defcustom achive-update-time 5
-  "Automatic update time."
+(defcustom achive-update-seconds 5
+  "Seconds of automatic update time."
   :group 'achive
   :type 'integer)
 
@@ -186,14 +186,14 @@ FIELDS: list of field index."
                        (string-to-number (nth (cdr (assoc 'yestclose fields)) list))))
 
 
-(defun achive-make-volume (list fields)
+(defun achive-make-volume (list _fields)
   "Get volume of display, current volume / 100.
 LIST: list of a stock value.
 FIELDS: list of field index."
   (/ (string-to-number (nth 9 list)) 100))
 
 
-(defun achive-make-turn-volume (list fields)
+(defun achive-make-turn-volume (list _fields)
   "Get turn-volume of display, current turn-volume / 10000, unit W (10000).
 LIST: list of a stock value.
 FIELDS: list of field index."
@@ -279,7 +279,7 @@ CODES: list of stock code."
       (achive-set-timeout (lambda ()
                             (achive-handle-request codes (lambda ()
                                                            (achive-handle-auto-update codes))))
-                          achive-update-time)))
+                          achive-update-seconds)))
 
 ;;;;; Keymaps
 
