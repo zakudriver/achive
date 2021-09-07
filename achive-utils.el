@@ -79,7 +79,7 @@ Return '+-xx%'"
   (if (= yestclose 0.0)
       (setq yestclose 1.0))
   (let ((result (/ (- price yestclose) yestclose)))
-    (format "%0.2f%%" (* result 100))))
+    (format "%s%0.2f%%" (if (> result 0) "+" "") (* result 100))))
 
 
 (defmacro achive-set-timeout (callback seconds)
