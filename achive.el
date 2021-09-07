@@ -81,10 +81,16 @@
   :type 'boolean)
 
 
-(defcustom achive-update-time 4
+(defcustom achive-update-time 5
   "Automatic update time."
   :group 'achive
   :type 'integer)
+
+
+(defcustom achive-display-indexs t
+  "Whether to show indexs."
+  :group 'achive
+  :type 'boolean)
 
 ;;;; constants
 
@@ -129,7 +135,7 @@ CALLBACK: function"
 
 (defun achive-parse-response ()
   "Parse sina http response result by body."
-  (set-buffer-multibyte t)
+  ;; (set-buffer-multibyte t)
   (goto-char (point-min))
   (if (/= 200 url-http-response-status)
       (error "Problem connecting to the server"))
@@ -161,23 +167,37 @@ Return index and stocks data."
   "Format row content.
 ROW-STR: string of row."
   (let ((field-index-list
-         '((code . 0) (name . 1) (price . 4) (percent . achive-call-compute-percent)
-           (high . 5) (low . 6) (volume . 9) (turn-volume . 10) (open . 2) (yestclose . 3)))
+         '((code . 0) (name . 1) (price . 4) (percent . achive-call-make-percent)
+           (high . 5) (low . 6) (volume . achive-make-volume) (turn-volume . achive-make-turn-volume) (open . 2) (yestclose . 3)))
         (value-list (split-string row-str ",")))
     (if (= 1 (length value-list))
         (append value-list '("-" "-" "-" "-" "-" "-" "-" "-" "-"))
       (cl-loop for (_k . v) in field-index-list
-               collect (if (integerp v)
-                           (nth v value-list)
-                         (funcall v value-list field-index-list))))))
+               collect (if (functionp v)
+                           (funcall v value-list field-index-list)
+                         (nth v value-list))))))
 
 
-(defun achive-call-compute-percent (list fields)
-  "Call function `achive-compute-percent'.
+(defun achive-call-make-percent (list fields)
+  "Call function `achive-make-percent'.
 LIST: list of a stock value.
 FIELDS: list of field index."
-  (achive-compute-percent (string-to-number (nth (cdr (assoc 'price fields)) list))
-                          (string-to-number (nth (cdr (assoc 'yestclose fields)) list))))
+  (achive-make-percent (string-to-number (nth (cdr (assoc 'price fields)) list))
+                       (string-to-number (nth (cdr (assoc 'yestclose fields)) list))))
+
+
+(defun achive-make-volume (list fields)
+  "Get volume of display, current volume / 100.
+LIST: list of a stock value.
+FIELDS: list of field index."
+  (/ (string-to-number (nth 9 list)) 100))
+
+
+(defun achive-make-turn-volume (list fields)
+  "Get turn-volume of display, current turn-volume / 10000, unit W (10000).
+LIST: list of a stock value.
+FIELDS: list of field index."
+  (format "%dW" (/ (string-to-number (nth 10 list)) 10000)))
 
 
 (defun achive-handle-request (codes &optional callback)
@@ -215,6 +235,14 @@ If at 9:00 - 15:00 on weekdays and visual buffer is existing, return t."
     (with-current-buffer (get-buffer-create achive-buffer-name)
       (let ((inhibit-read-only t))
         (achive-visual-mode)
+        
+        (setq buffer-file-coding-system 'gb18030
+              line-spacing 0.1)
+        (defface buffer-local-face
+          '((t :height 115))
+          "buffer-local face")
+        (buffer-face-set 'buffer-local-face)
+        
         (insert "** " (achive-format-time-local achive-language) "\n\n"))))
   (let ((window (get-buffer-window achive-buffer-name)))
     (if window
@@ -231,13 +259,13 @@ Insert string of TIME, INDEXS and STOCKS."
       ;; (achive-visual-mode)
       (insert "** " (achive-format-time-local achive-language) "\n\n")
 
-      (when (stringp indexs)
+      (when (and achive-display-indexs (stringp indexs))
         (insert (achive-text-local achive-index-title achive-language) "\n")
         (insert (achive-text-local achive-stocks-header achive-language))
         (insert indexs))
       
       (when (stringp stocks)
-        (insert (achive-text-local achive-stocks-title achive-language) "\n")
+        (insert "\n" (achive-text-local achive-stocks-title achive-language) "\n")
         (insert (achive-text-local achive-stocks-header achive-language))
         (insert stocks))
       
@@ -269,7 +297,6 @@ CODES: list of stock code."
 (defun achive ()
   "Launch achive."
   (interactive)
-  
   (if (achive-switch-visual)
       (let ((codes (append achive-index-list achive-stock-list)))
         (achive-handle-request codes)
@@ -281,8 +308,10 @@ CODES: list of stock code."
 (defun achive-update ()
   "Request and render."
   (interactive)
-  (let ((codes (append achive-index-list achive-stock-list)))
-    (achive-handle-request codes)))
+  (if (get-buffer-window achive-buffer-name)
+      (let ((codes (append achive-index-list achive-stock-list)))
+        (achive-handle-request codes)
+        (message "Achive has been updated."))))
 
 
 ;;;;; mode
@@ -297,14 +326,6 @@ CODES: list of stock code."
   (setq-local line-move-visual t)
   (setq-local view-read-only nil)
   (run-mode-hooks))
-
-
-(define-minor-mode achive-mode
-  "Minor mode to enable achive."
-  :init-value nil
-  :group 'achive
-  :global t
-  :lighter nil)
 
 
 (provide 'achive)

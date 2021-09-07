@@ -1,2 +1,13 @@
 #+TITLE:A-Chive 
 
+* Usage
+#+BEGIN_SRC lisp
+  (use-package achive
+    :load-path "~/.emacs.d/site-lisp/achive"
+    :bind
+    ("C-c a a" . achive)
+    ("C-c a g" . achive-update)
+    :custom
+    (achive-language 'zh)
+    (achive-stock-list '("sh600036" "sh601012" "sz000625")))
+#+END_SRC

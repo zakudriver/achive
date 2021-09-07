@@ -69,7 +69,7 @@ LANG: symbol of language type."
       (format "%s 星期%s" (format-time-string "%G-%m-%d %H:%M:%S") (nth week-index weeks)))))
 
 
-(defun achive-compute-percent (price yestclose)
+(defun achive-make-percent (price yestclose)
   "Get stocks percent by (PRICE - YESTCLOSE) / yestclose.
 Return '+-xx%'"
   (unless (floatp price)
