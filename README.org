@@ -1,4 +1,10 @@
-#+TITLE:A-Chive 
+#+TITLE:A-Chive
+
+* Screencast
+[[./imgs/achive.png]]
+
+* Installation
+Download el file to your load-path.
 
 * Usage
 #+BEGIN_SRC lisp
@@ -8,6 +14,8 @@
     ("C-c a a" . achive)
     ("C-c a g" . achive-update)
     :custom
+    (achive-auto-update t)
+    (achive-update-time 5)
     (achive-language 'zh)
     (achive-stock-list '("sh600036" "sh601012" "sz000625" "sz002050" "sz002013" "sh600176")))
 #+END_SRC
