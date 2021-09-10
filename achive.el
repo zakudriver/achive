@@ -1,11 +1,11 @@
-;;; achive.el --- A-stocks real-time price.  -*- lexical-binding: t; -*-
+;;; achive.el --- A-stocks real-time data  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2017 dingansich_kum0
 
 ;; Author: dingansich_kum0 <zy.hua1122@outlook.com>
 ;; URL: https://github.com/dingansichKum0/achive
 ;; Version: 1.0
-;; Package-Requires: ((emacs "25.2")
+;; Package-Requires: ((emacs "25.2"))
 ;; Keywords: tools
 
 ;; This file is not part of GNU Emacs.
@@ -25,13 +25,17 @@
 
 ;;; Commentary:
 
+;; Achive is a plug-in based on api of Sina that creates a dashboard displaying real-time data of a-share indexs and stocks.
+;; Thanks for the super-fast Sina api, and achive performs so well to update data automatically.
+
 ;;; Code:
 
 ;;;; Requirements
 
-(require 'achive-utils)
+(require 'cl-lib)
 (require 'url)
 (require 'org-table)
+(require 'achive-utils)
 
 
 (defvar url-http-response-status)
@@ -327,10 +331,10 @@ CODES: list of stock code."
   (setq-local view-read-only nil)
   (setq buffer-file-coding-system 'gb18030
         line-spacing 0.1)
-  (defface buffer-local-face
+  (defface achive-buffer-local-face
     '((t :height 115))
-    "buffer-local face")
-  (buffer-face-set 'buffer-local-face)
+    "achive-buffer-local face")
+  (buffer-face-set 'achive-buffer-local-face)
 
   (linum-mode 0)
   (run-mode-hooks))

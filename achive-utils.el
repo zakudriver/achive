@@ -5,7 +5,7 @@
 ;; Author: dingansich_kum0 <zy.hua1122@outlook.com>
 ;; URL: https://github.com/dingansichKum0/achive
 ;; Version: 1.0
-;; Package-Requires: ((emacs "25.2")
+;; Package-Requires: ((emacs "25.2"))
 ;; Keywords: tools
 
 ;; This file is not part of GNU Emacs.
