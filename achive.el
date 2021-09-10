@@ -55,7 +55,7 @@
 
 
 (defcustom achive-stock-list '("sh600036" "sz000625")
-  "A-Stocks list."
+  "List of stocks."
   :group 'achive
   :type 'list)
 
@@ -67,7 +67,7 @@
 
 
 (defcustom achive-language 'en
-  "Current language."
+  "Displayed language."
   :group 'achive
   :type '(choice
           (const :tag "English" 'en)
@@ -79,14 +79,14 @@
   :type 'list)
 
 
-(defcustom achive-auto-update t
-  "Whether to update automatically."
+(defcustom achive-auto-refresh t
+  "Whether to refresh automatically."
   :group 'achive
   :type 'boolean)
 
 
-(defcustom achive-update-seconds 5
-  "Seconds of automatic update time."
+(defcustom achive-refresh-seconds 5
+  "Seconds of automatic refresh time."
   :group 'achive
   :type 'integer)
 
@@ -224,8 +224,8 @@ CALLBACK: after the rendering."
                           (funcall callback))))))
 
 
-(defun achive-should-update ()
-  "Current should be update.
+(defun achive-should-refresh ()
+  "Current should be refresh.
 If at 9:00 - 11:30 or 13:00 - 15:00 on weekdays and visual buffer is existing, return t."
   (let ((week (format-time-string "%w"))
         should)
@@ -276,36 +276,45 @@ Insert string of TIME, INDEXS and STOCKS."
       (goto-char achive-prev-point))))
 
 
-(defun achive-handle-auto-update (codes)
-  "Automatic update.
+(defun achive-handle-auto-refresh (codes)
+  "Automatic refresh.
 CODES: list of stock code."
-  (if (achive-should-update)
+  (if (achive-should-refresh)
       (achive-set-timeout (lambda ()
                             (achive-handle-request codes (lambda ()
-                                                           (achive-handle-auto-update codes))))
-                          achive-update-seconds)))
+                                                           (achive-handle-auto-refresh codes))))
+                          achive-refresh-seconds)))
 
 ;;;;; interactive
 
 ;;;###autoload
 (defun achive ()
-  "Launch achive."
+  "Launch achive and switch to visual buffer."
   (interactive)
   (if (achive-switch-visual)
       (let ((codes (append achive-index-list achive-stock-list)))
         (achive-handle-request codes)
-        (if achive-auto-update
-            (achive-handle-auto-update codes)))))
+        (if achive-auto-refresh
+            (achive-handle-auto-refresh codes)))))
 
 
 ;;;###autoload
-(defun achive-update ()
-  "Request and render."
+(defun achive-refresh ()
+  "Manual refresh and render."
   (interactive)
   (if (get-buffer-window achive-buffer-name)
       (let ((codes (append achive-index-list achive-stock-list)))
         (achive-handle-request codes)
-        (message "Achive has been updated."))))
+        (message "Achive has been refreshed."))))
+
+
+;;;###autoload
+(defun achive-kill ()
+  "Kill achive."
+  (interactive)
+  (when (get-buffer achive-buffer-name)
+    (kill-buffer achive-buffer-name)
+    (message "Achive has been killed.")))
 
 ;;;;; Keymaps
 
@@ -316,7 +325,8 @@ CODES: list of stock code."
 (define-key achive-visual-mode-map "q" 'quit-window)
 (define-key achive-visual-mode-map "p" 'previous-line)
 (define-key achive-visual-mode-map "n" 'next-line)
-(define-key achive-visual-mode-map "g" 'achive-update)
+(define-key achive-visual-mode-map "g" 'achive-refresh)
+(define-key achive-visual-mode-map "Q" 'achive-kill)
 
 ;;;;; mode
 
