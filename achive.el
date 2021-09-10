@@ -112,6 +112,9 @@
 
 ;;;;; variables
 
+(defvar achive-prev-point nil
+  "Point of before render.")
+
 ;;;;; functions
 
 (defun achive-make-request-url (api parameter)
@@ -219,13 +222,14 @@ CALLBACK: after the rendering."
 
 (defun achive-should-update ()
   "Current should be update.
-If at 9:00 - 15:00 on weekdays and visual buffer is existing, return t."
+If at 9:00 - 11:30 or 13:00 - 15:00 on weekdays and visual buffer is existing, return t."
   (let ((week (format-time-string "%w"))
         should)
     (if (get-buffer-window achive-buffer-name)
         (unless (or (string= week "0") (string= week "6"))
           (setq should
-                (and (not (achive-compare-time "9:00")) (achive-compare-time "15:00")))))
+                (or (and (not (achive-compare-time "9:00")) (achive-compare-time "11:30"))
+                    (and (not (achive-compare-time "13:00")) (achive-compare-time "15:00"))))))
     should))
 
 
@@ -235,13 +239,6 @@ If at 9:00 - 15:00 on weekdays and visual buffer is existing, return t."
     (with-current-buffer (get-buffer-create achive-buffer-name)
       (let ((inhibit-read-only t))
         (achive-visual-mode)
-        
-        (setq buffer-file-coding-system 'gb18030
-              line-spacing 0.1)
-        (defface buffer-local-face
-          '((t :height 115))
-          "buffer-local face")
-        (buffer-face-set 'buffer-local-face)
         
         (insert "** " (achive-format-time-local achive-language) "\n\n"))))
   (let ((window (get-buffer-window achive-buffer-name)))
@@ -255,7 +252,9 @@ If at 9:00 - 15:00 on weekdays and visual buffer is existing, return t."
 Insert string of TIME, INDEXS and STOCKS."
   (with-current-buffer (get-buffer achive-buffer-name)
     (let ((inhibit-read-only t))
+      (setq achive-prev-point (point))
       (erase-buffer)
+      
       ;; (achive-visual-mode)
       (insert "** " (achive-format-time-local achive-language) "\n\n")
 
@@ -268,8 +267,9 @@ Insert string of TIME, INDEXS and STOCKS."
         (insert "\n" (achive-text-local achive-stocks-title achive-language) "\n")
         (insert (achive-text-local achive-stocks-header achive-language))
         (insert stocks))
-      
-      (org-table-map-tables 'org-table-align t))))
+
+      (org-table-map-tables 'org-table-align t)
+      (goto-char achive-prev-point))))
 
 
 (defun achive-handle-auto-update (codes)
@@ -280,16 +280,6 @@ CODES: list of stock code."
                             (achive-handle-request codes (lambda ()
                                                            (achive-handle-auto-update codes))))
                           achive-update-seconds)))
-
-;;;;; Keymaps
-
-(defvar achive-visual-mode-map (make-sparse-keymap "achive visual mode")
-  "Achive-visual-mode keymap.")
-
-
-(define-key achive-visual-mode-map "q" 'quit-window)
-(define-key achive-visual-mode-map "p" 'previous-line)
-(define-key achive-visual-mode-map "n" 'next-line)
 
 ;;;;; interactive
 
@@ -313,6 +303,16 @@ CODES: list of stock code."
         (achive-handle-request codes)
         (message "Achive has been updated."))))
 
+;;;;; Keymaps
+
+(defvar achive-visual-mode-map (make-sparse-keymap "achive visual mode")
+  "Achive-visual-mode keymap.")
+
+
+(define-key achive-visual-mode-map "q" 'quit-window)
+(define-key achive-visual-mode-map "p" 'previous-line)
+(define-key achive-visual-mode-map "n" 'next-line)
+(define-key achive-visual-mode-map "g" 'achive-update)
 
 ;;;;; mode
 
@@ -325,12 +325,22 @@ CODES: list of stock code."
         show-trailing-whitespace nil)
   (setq-local line-move-visual t)
   (setq-local view-read-only nil)
+  (setq buffer-file-coding-system 'gb18030
+        line-spacing 0.1)
+  (defface buffer-local-face
+    '((t :height 115))
+    "buffer-local face")
+  (buffer-face-set 'buffer-local-face)
+
+  (linum-mode 0)
   (run-mode-hooks))
 
 
 (provide 'achive)
 
 ;;; achive.el ends here
+
+;; (buffer-substring-no-properties (line-beginning-position) (line-end-position))
 
 ;; 0：”大秦铁路”，股票名字；
 ;; 1：”27.55″，今日开盘价；
