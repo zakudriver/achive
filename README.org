@@ -46,4 +46,9 @@ Download el file to your load-path.
 | achive-refresh | Manual refresh and render.                 |
 | achive-kill    | Kill achive.                               |
 
+* For traders
+#+BEGIN_QUOTE
+bought and forget.
+#+END_QUOTE
+
 ** [[http://www.gnu.org/licenses/][License]]

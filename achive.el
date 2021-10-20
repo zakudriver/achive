@@ -48,12 +48,6 @@
   :group 'utils)
 
 
-(defcustom achive-api "http://hq.sinajs.cn"
-  "Stocks Api."
-  :group 'achive
-  :type 'string)
-
-
 (defcustom achive-stock-list '("sh600036" "sz000625")
   "List of stocks."
   :group 'achive
@@ -98,6 +92,10 @@
 
 ;;;; constants
 
+(defconst achive-api "http://hq.sinajs.cn"
+  "Stocks Api.")
+
+
 (defconst achive-stocks-header '("|-\n| code | name | price | percent | high | low | volume | turn-volume | open | yestclose |\n|-\n" "|-\n| 股票代码 | 名称 | 当前价 | 涨跌幅 | 最高价 | 最低价 | 成交量 | 成交额 | 开盘价 | 昨日收盘价 |\n|-\n")
   "Stocks list headern.")
 
@@ -129,9 +127,8 @@ PARAMETER: request url parameter."
 
 
 (defun achive-request (url callback)
-  "Request function.
-URL: string of url.
-CALLBACK: function"
+  "Handle request by URL.
+CALLBACK: function of after response."
   (let ((url-request-method "POST")
         (url-request-extra-headers '(("Content-Type" . "application/javascript;charset=UTF-8"))))
     (url-retrieve url (lambda (_status)
@@ -142,13 +139,10 @@ CALLBACK: function"
 
 (defun achive-parse-response ()
   "Parse sina http response result by body."
-  ;; (set-buffer-multibyte t)
-  (goto-char (point-min))
   (if (/= 200 url-http-response-status)
-      (error "Problem connecting to the server"))
+      (error "Internal Server Error."))
   (let ((resp-gbcode (with-current-buffer (current-buffer)
                        (buffer-substring-no-properties (search-forward "\n\n") (point-max)))))
-    ;; resp-gbcode
     (decode-coding-string resp-gbcode 'gb18030)))
 
 
@@ -226,7 +220,8 @@ CALLBACK: after the rendering."
 
 (defun achive-should-refresh ()
   "Current should be refresh.
-If at 9:00 - 11:30 or 13:00 - 15:00 on weekdays and visual buffer is existing, return t."
+If at 9:00 - 11:30 or 13:00 - 15:00 on weekdays and visual buffer is existing,
+return t. Otherwise, return nil."
   (let ((week (format-time-string "%w"))
         should)
     (if (get-buffer-window achive-buffer-name)
