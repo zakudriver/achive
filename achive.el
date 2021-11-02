@@ -304,24 +304,12 @@ CODES: list of stock code."
 
 
 ;;;###autoload
-(defun achive-kill ()
-  "Kill achive."
+(defun achive-exit ()
+  "Exit achive."
   (interactive)
   (when (get-buffer achive-buffer-name)
-    (kill-buffer achive-buffer-name)
+    (quit-window t (get-buffer-window achive-buffer-name))
     (message "Achive has been killed.")))
-
-;;;;; Keymaps
-
-(defvar achive-visual-mode-map (make-sparse-keymap "achive visual mode")
-  "Achive-visual-mode keymap.")
-
-
-(define-key achive-visual-mode-map "q" 'quit-window)
-(define-key achive-visual-mode-map "p" 'previous-line)
-(define-key achive-visual-mode-map "n" 'next-line)
-(define-key achive-visual-mode-map "g" 'achive-refresh)
-(define-key achive-visual-mode-map "Q" 'achive-kill)
 
 ;;;;; mode
 
@@ -331,17 +319,21 @@ CODES: list of stock code."
   (buffer-disable-undo)
   (setq truncate-lines t
         buffer-read-only t
-        show-trailing-whitespace nil)
-  (setq-local line-move-visual t)
-  (setq-local view-read-only nil)
-  (setq buffer-file-coding-system 'gb18030
+        show-trailing-whitespace nil
+        buffer-file-coding-system 'gb18030
         line-spacing 0.1)
+  (setq-local line-move-visual t
+              view-read-only nil)
+  
   (defface achive-buffer-local-face
     '((t :height 115))
     "achive-buffer-local face")
   (buffer-face-set 'achive-buffer-local-face)
 
-  (linum-mode 0)
+  (local-set-key "q" 'achive-exit)
+  (local-set-key "p" 'previous-line)
+  (local-set-key "n" 'next-line)
+  (local-set-key "g" 'achive-refresh)
   (run-mode-hooks))
 
 
