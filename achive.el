@@ -92,7 +92,7 @@
 
 ;;;; constants
 
-(defconst achive-api "http://hq.sinajs.cn"
+(defconst achive-api "https://hq.sinajs.cn"
   "Stocks Api.")
 
 
@@ -130,7 +130,7 @@ PARAMETER: request url parameter."
   "Handle request by URL.
 CALLBACK: function of after response."
   (let ((url-request-method "POST")
-        (url-request-extra-headers '(("Content-Type" . "application/javascript;charset=UTF-8"))))
+        (url-request-extra-headers '(("Content-Type" . "application/javascript;charset=UTF-8") ("Referer" . "https://finance.sina.com.cn"))))
     (url-retrieve url (lambda (_status)
                         (let ((inhibit-message t))
                           (message "achive: %s at %s" "The request is successful." (format-time-string "%T")))
