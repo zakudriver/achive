@@ -45,6 +45,7 @@ Download el file to your load-path.
 | achive         | Launch achive and switch to visual buffer. |
 | achive-refresh | Manual refresh and render.                 |
 | achive-exit    | Exit achive.                               |
+| achive-search  | Search stocks by code.                     |
 
 * For traders
 #+BEGIN_QUOTE
