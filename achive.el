@@ -59,6 +59,11 @@
   :group 'achive
   :type 'string)
 
+(defcustom achive-search-buffer-name "*A Chive - results -*"
+  "Search buffer name."
+  :group 'achive
+  :type 'string)
+
 
 (defcustom achive-language 'en
   "Displayed language."
@@ -90,6 +95,13 @@
   :group 'achive
   :type 'boolean)
 
+
+(defcustom achive-cache (concat user-emacs-directory ".achive")
+  "Path of cache."
+  :group 'achive
+  :type 'string)
+
+
 ;;;; constants
 
 (defconst achive-api "https://hq.sinajs.cn"
@@ -106,6 +118,10 @@
 
 (defconst achive-stocks-title '("** Individual Stocks" "** 个股")
   "Stocks list title.")
+
+
+(defconst achive-search-title '("** Results" "** 结果")
+  "Search list title.")
 
 
 (defconst achive-visual-table-row-format
@@ -207,16 +223,18 @@ CODES: list of stock code.
 CALLBACK: after the rendering."
   (achive-request (achive-make-request-url achive-api codes)
                   (lambda ()
-                    (if (get-buffer-window achive-buffer-name)
-                        (let ((resp-str (achive-parse-response))
-                              indexs stocks)
-                          (if (listp achive-index-list)
-                              (setq indexs (achive-format-content achive-index-list resp-str)))
-                          (if (listp achive-stock-list)
-                              (setq stocks (achive-format-content achive-stock-list resp-str)))
-                          (achive-visual-render indexs stocks)
-                          (if (functionp callback)
-                              (funcall callback)))))))
+                    (let ((resp-str (achive-parse-response))
+                          indexs stocks)
+                      (if (listp achive-index-list)
+                          (setq indexs (achive-format-content achive-index-list resp-str)))
+                      (if (listp achive-stock-list)
+                          (setq stocks (achive-format-content achive-stock-list resp-str)))
+                      (achive-visual-render
+                       :buffer-name achive-buffer-name
+                       :indexs indexs
+                       :stocks stocks)
+                      (if (functionp callback)
+                          (funcall callback))))))
 
 
 (defun achive-should-refresh ()
@@ -225,7 +243,7 @@ If at 9:00 - 11:30 or 13:00 - 15:00 on weekdays and visual buffer is existing,
 return t. Otherwise, return nil."
   (let ((week (format-time-string "%w"))
         should)
-    (if (get-buffer-window achive-buffer-name)
+    (if (get-buffer achive-buffer-name)
         (unless (or (string= week "0") (string= week "6"))
           (setq should
                 (or (and (not (achive-compare-time "9:00")) (achive-compare-time "11:30"))
@@ -247,14 +265,14 @@ return t. Otherwise, return nil."
       (switch-to-buffer-other-window achive-buffer-name))))
 
 
-(defun achive-visual-render (indexs stocks)
-  "Render stocks list.
+(cl-defun achive-visual-render (&key buffer-name indexs stocks search)
+  "Render stocks list by BUFFER-NAME. 
 Insert string of TIME, INDEXS and STOCKS."
-  (with-current-buffer (get-buffer achive-buffer-name)
+  (with-current-buffer (get-buffer buffer-name)
     (let ((inhibit-read-only t))
       (setq achive-prev-point (point))
       (erase-buffer)
-      
+
       ;; (achive-visual-mode)
       (insert "** " (achive-format-time-local achive-language) "\n\n")
 
@@ -267,6 +285,11 @@ Insert string of TIME, INDEXS and STOCKS."
         (insert "\n" (achive-text-local achive-stocks-title achive-language) "\n")
         (insert (achive-text-local achive-stocks-header achive-language))
         (insert stocks))
+
+      (when (stringp search)  
+        (insert "\n" (achive-text-local achive-search-title achive-language) "\n")
+        (insert (achive-text-local achive-stocks-header achive-language))
+        (insert search))
 
       (org-table-map-tables 'org-table-align t)
       (goto-char achive-prev-point))))
@@ -312,6 +335,28 @@ CODES: list of stock code."
     (quit-window t (get-buffer-window achive-buffer-name))
     (message "Achive has been killed.")))
 
+
+;;;###autoload
+(defun achive-search (codes)
+  "Search stock by code."
+  (interactive "sPlease input code: ")
+
+  (setq codes (split-string codes))
+
+  (with-current-buffer (get-buffer-create achive-search-buffer-name)
+    (let ((inhibit-read-only t))
+      (achive-search-visual-mode)
+      (insert "** " (achive-format-time-local achive-language) "\n\n")
+      (switch-to-buffer-other-window achive-search-buffer-name)))
+  
+  (achive-request
+   (achive-make-request-url achive-api codes)
+   (lambda ()
+     (let ((resp-str (achive-parse-response)))
+       (achive-visual-render
+        :buffer-name achive-search-buffer-name
+        :search (achive-format-content codes resp-str))))))
+
 ;;;;; mode
 
 (define-derived-mode achive-visual-mode org-mode achive-buffer-name
@@ -336,6 +381,32 @@ CODES: list of stock code."
   (local-set-key "n" 'next-line)
   (local-set-key "g" 'achive-refresh)
   (run-mode-hooks))
+
+
+(define-derived-mode achive-search-visual-mode org-mode achive-search-buffer-name
+  "Major mode for achive search view."
+  :group 'achive
+  (buffer-disable-undo)
+  (setq truncate-lines t
+        buffer-read-only t
+        show-trailing-whitespace nil
+        buffer-file-coding-system 'gb18030
+        line-spacing 0.1)
+  (setq-local line-move-visual t
+              view-read-only nil)
+  
+  (defface achive-buffer-local-face
+    '((t :height 115))
+    "achive-buffer-local face")
+  (buffer-face-set 'achive-buffer-local-face)
+
+  (local-set-key "q" '(lambda ()
+                        (interactive)
+                        (quit-window t (get-buffer-window achive-search-buffer-name))))
+  (local-set-key "p" 'previous-line)
+  (local-set-key "n" 'next-line)
+  (run-mode-hooks))
+
 
 
 (provide 'achive)
