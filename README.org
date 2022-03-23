@@ -29,15 +29,16 @@ Download el file to your load-path.
 #+END_SRC
 
 * Customization
-| Variable               | Default                             | type                                                         | Description                        |
-|------------------------+-------------------------------------+--------------------------------------------------------------+------------------------------------|
-| achive-stock-list      | '("sh600036" "sz000625")            | list                                                         | List of stocks.                    |
-| achive-buffer-name     | "*A Chive*"                           | string                                                       | Stocks buffer name.                |
-| achive-language        | 'en                                 | '(choice (const :tag "English" 'en) (const :tag "中文" 'zh)) | Displayed language.                |
-| achive-index-list      | '("sh000001" "sz399001" "sz399006") | list                                                         | List of composite index.           |
-| achive-auto-refresh    | t                                   | boolean                                                      | Whether to refresh automatically.  |
-| achive-refresh-seconds | 5                                   | integer                                                      | Seconds of automatic refresh time. |
-| achive-display-indexs  | t                                   | boolean                                                      | Whether to show indexs.            |
+| Variable               | Default                                 | type                                                         | Description                        |
+|------------------------+-----------------------------------------+--------------------------------------------------------------+------------------------------------|
+| achive-stock-list      | '("sh600036" "sz000625")                | list                                                         | List of stocks.                    |
+| achive-buffer-name     | "*A Chive*"                               | string                                                       | Stocks buffer name.                |
+| achive-language        | 'en                                     | '(choice (const :tag "English" 'en) (const :tag "中文" 'zh)) | Displayed language.                |
+| achive-index-list      | '("sh000001" "sz399001" "sz399006")     | list                                                         | List of composite index.           |
+| achive-auto-refresh    | t                                       | boolean                                                      | Whether to refresh automatically.  |
+| achive-refresh-seconds | 5                                       | integer                                                      | Seconds of automatic refresh time. |
+| achive-display-indexs  | t                                       | boolean                                                      | Whether to show indexs.            |
+| achive-cache-path      | (concat user-emacs-directory ".achive") | string                                                       | Path of cache.                     |
 
 * Command
 | Command        | Description                                |
@@ -45,7 +46,9 @@ Download el file to your load-path.
 | achive         | Launch achive and switch to visual buffer. |
 | achive-refresh | Manual refresh and render.                 |
 | achive-exit    | Exit achive.                               |
-| achive-search  | Search stocks by code.                     |
+| achive-search  | Search stocks by codes.                    |
+| achive-add     | Add stocks by codes                        |
+| achive-remove  | Remove stocks.                             |
 
 * For traders
 #+BEGIN_QUOTE

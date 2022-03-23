@@ -388,7 +388,7 @@ CODES: string of stocks list."
 
 ;;;###autoload
 (defun achive-add (codes)
-  "Add stocks by code.
+  "Add stocks by codes.
 CODES: string of stocks list."
   (interactive "sPlease input code: ")
   (setq codes (split-string codes))
@@ -399,8 +399,9 @@ CODES: string of stocks list."
     (message "[%s] have been added." codes)))
 
 
+;;;###autoload
 (defun achive-remove ()
-  "Remove stocks by the minibuffer."
+  "Remove stocks."
   (interactive)
   (let* ((code (completing-read "Please select the stock code to remove: "
                                 achive-stocks
