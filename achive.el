@@ -96,7 +96,7 @@
   :type 'boolean)
 
 
-(defcustom achive-cache (concat user-emacs-directory ".achive")
+(defcustom achive-cache-path (concat user-emacs-directory ".achive")
   "Path of cache."
   :group 'achive
   :type 'string)
@@ -132,6 +132,14 @@
 
 (defvar achive-prev-point nil
   "Point of before render.")
+
+
+(defvar achive-search-codes nil
+  "Search code list.")
+
+
+(defvar achive-stocks nil
+  "Realtime stocks code list.")
 
 ;;;;; functions
 
@@ -227,8 +235,8 @@ CALLBACK: after the rendering."
                           indexs stocks)
                       (if (listp achive-index-list)
                           (setq indexs (achive-format-content achive-index-list resp-str)))
-                      (if (listp achive-stock-list)
-                          (setq stocks (achive-format-content achive-stock-list resp-str)))
+                      (if (listp achive-stocks)
+                          (setq stocks (achive-format-content achive-stocks resp-str)))
                       (achive-visual-render
                        :buffer-name achive-buffer-name
                        :indexs indexs
@@ -251,14 +259,31 @@ return t. Otherwise, return nil."
     should))
 
 
+(defun achive-handle-search-request (codes)
+  "Handle search request by stock code list.
+CODES: list of stock code."
+  (achive-request
+   (achive-make-request-url achive-api codes)
+   (lambda ()
+     (let ((resp-str (achive-parse-response)))
+       (achive-visual-render
+        :buffer-name achive-search-buffer-name
+        :search (achive-format-content codes resp-str))))))
+
+
+(defun achive-create-visual (buffer-name)
+  "Create major mode buffer.
+BUFFER-NAME: buffer name of major mode."
+  (with-current-buffer (get-buffer-create buffer-name)
+    (let ((inhibit-read-only t))
+      (achive-visual-mode)
+      (insert "** " (achive-format-time-local achive-language) "\n\n"))))
+
+
 (defun achive-switch-visual ()
   "Switch to visual buffer."
   (unless (get-buffer achive-buffer-name)
-    (with-current-buffer (get-buffer-create achive-buffer-name)
-      (let ((inhibit-read-only t))
-        (achive-visual-mode)
-        
-        (insert "** " (achive-format-time-local achive-language) "\n\n"))))
+    (achive-create-visual achive-buffer-name))
   (let ((window (get-buffer-window achive-buffer-name)))
     (if window
         (delete-window window)
@@ -304,62 +329,96 @@ CODES: list of stock code."
                                                            (achive-handle-auto-refresh codes))))
                           achive-refresh-seconds)))
 
+
+(defun achive-init ()
+  "Init program. Read cache codes from file."
+  (let ((cache (achive-readcache achive-cache-path)))
+    (unless cache
+      (achive-writecache achive-cache-path achive-stock-list)
+      (setq cache achive-stock-list))
+    (setq achive-stocks cache)))
+
+
 ;;;;; interactive
 
 ;;;###autoload
 (defun achive ()
   "Launch achive and switch to visual buffer."
   (interactive)
-  (if (achive-switch-visual)
-      (let ((codes (append achive-index-list achive-stock-list)))
-        (achive-handle-request codes)
-        (if achive-auto-refresh
-            (achive-handle-auto-refresh codes)))))
+  (when (achive-switch-visual)
+    (achive-init)
+    (achive-handle-request achive-stocks)
+    (if achive-auto-refresh
+        (achive-handle-auto-refresh achive-stocks))))
 
 
 ;;;###autoload
 (defun achive-refresh ()
   "Manual refresh and render."
   (interactive)
-  (if (get-buffer-window achive-buffer-name)
-      (let ((codes (append achive-index-list achive-stock-list)))
-        (achive-handle-request codes)
-        (message "Achive has been refreshed."))))
+  (let ((name (buffer-name)))
+    (when (string= achive-buffer-name name)
+      (achive-handle-request achive-stocks)
+      (message "Achive has been refreshed."))
+
+    (when (string= achive-search-buffer-name name)
+      (achive-handle-search-request achive-search-codes)
+      (message "Achive search results has been refreshed."))))
 
 
 ;;;###autoload
 (defun achive-exit ()
   "Exit achive."
   (interactive)
-  (when (get-buffer achive-buffer-name)
-    (quit-window t (get-buffer-window achive-buffer-name))
-    (message "Achive has been killed.")))
+  (quit-window t)
+  (message "Achive has been killed."))
 
 
 ;;;###autoload
 (defun achive-search (codes)
-  "Search stock by code."
+  "Search stock by codes.
+CODES: string of stocks list."
   (interactive "sPlease input code: ")
 
-  (setq codes (split-string codes))
+  (setq achive-search-codes (split-string codes))
+  (achive-create-visual achive-search-buffer-name)
+  (switch-to-buffer achive-search-buffer-name)
+  (achive-handle-search-request achive-search-codes))
 
-  (with-current-buffer (get-buffer-create achive-search-buffer-name)
-    (let ((inhibit-read-only t))
-      (achive-search-visual-mode)
-      (insert "** " (achive-format-time-local achive-language) "\n\n")
-      (switch-to-buffer-other-window achive-search-buffer-name)))
-  
-  (achive-request
-   (achive-make-request-url achive-api codes)
-   (lambda ()
-     (let ((resp-str (achive-parse-response)))
-       (achive-visual-render
-        :buffer-name achive-search-buffer-name
-        :search (achive-format-content codes resp-str))))))
+
+;;;###autoload
+(defun achive-add (codes)
+  "Add stocks by code.
+CODES: string of stocks list."
+  (interactive "sPlease input code: ")
+  (setq codes (split-string codes))
+  (when codes
+    (setq achive-stocks (append achive-stocks codes))
+    (achive-writecache achive-cache-path achive-stocks)
+    (achive-handle-request achive-stocks)
+    (message "[%s] have been added." codes)))
+
+
+(defun achive-remove ()
+  "Remove stocks by the minibuffer."
+  (interactive)
+  (let* ((code (completing-read "Please select the stock code to remove: "
+                                achive-stocks
+                                nil
+                                t
+                                nil
+                                nil
+                                nil))
+         (index (achive-list-included-p achive-stocks code (lambda (a b) (string= a b)))))
+    (when index
+      (setq achive-stocks (achive-remove-nth-element achive-stocks index))
+      (achive-writecache achive-cache-path achive-stocks)
+      (achive-handle-request achive-stocks)
+      (message "<%s> have been removed." code))))
 
 ;;;;; mode
 
-(define-derived-mode achive-visual-mode org-mode achive-buffer-name
+(define-derived-mode achive-visual-mode org-mode
   "Major mode for achive stocks view."
   :group 'achive
   (buffer-disable-undo)
@@ -380,31 +439,9 @@ CODES: list of stock code."
   (local-set-key "p" 'previous-line)
   (local-set-key "n" 'next-line)
   (local-set-key "g" 'achive-refresh)
-  (run-mode-hooks))
-
-
-(define-derived-mode achive-search-visual-mode org-mode achive-search-buffer-name
-  "Major mode for achive search view."
-  :group 'achive
-  (buffer-disable-undo)
-  (setq truncate-lines t
-        buffer-read-only t
-        show-trailing-whitespace nil
-        buffer-file-coding-system 'gb18030
-        line-spacing 0.1)
-  (setq-local line-move-visual t
-              view-read-only nil)
+  (local-set-key "+" 'achive-add)
+  (local-set-key "_" 'achive-remove)
   
-  (defface achive-buffer-local-face
-    '((t :height 115))
-    "achive-buffer-local face")
-  (buffer-face-set 'achive-buffer-local-face)
-
-  (local-set-key "q" '(lambda ()
-                        (interactive)
-                        (quit-window t (get-buffer-window achive-search-buffer-name))))
-  (local-set-key "p" 'previous-line)
-  (local-set-key "n" 'next-line)
   (run-mode-hooks))
 
 

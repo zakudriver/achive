@@ -88,8 +88,8 @@ CALLBACK: callback function.
 SECONDS: integer of seconds."
   `(let ((timer))
      (setq timer (run-with-timer ,seconds nil (lambda ()
-                                                     (cancel-timer timer)
-                                                     (funcall ,callback))))))
+                                                (cancel-timer timer)
+                                                (funcall ,callback))))))
 
 
 (defun achive-time-list-index (word)
@@ -133,6 +133,53 @@ If now less than time return t."
   (let ((now (current-time))
         (time (achive-hhmm-to-time hhmm)))
     (time-less-p now time)))
+
+
+(defun achive-readcache (path)
+  "Read cache file of stock codes.
+PATH: path of file dir."
+  (if (file-exists-p path)
+      (with-temp-buffer
+        (insert-file-contents path)
+        (read (current-buffer)))))
+
+
+(defun achive-writecache (path codes)
+  "Write stock codes to cache file.
+PATH: path of file dir.
+CODES: list of stock codes."
+  (with-temp-file path
+    (prin1 codes (current-buffer))))
+
+
+(defun achive-list-included-p (list target &optional equal which)
+  "Whether TARGET is included in LIST, and return index or nil.
+WHICH is a `nth' function to LIST."
+  (unless equal
+    (setq equal (lambda (a b) (= a b))))
+
+  (unless which
+    (setq which (lambda (v) v)))
+  
+  (cl-loop with i = 0
+           for v in list
+           if (funcall equal
+                       (funcall which v)
+                       target)
+           return i
+           else
+           do (cl-incf i)
+           finally return nil))
+
+
+(defun achive-remove-nth-element (list index)
+  "Remove list element by index."
+  (if (< (length list) (1+ index))
+      nil
+    (if (zerop index) (cdr list)
+      (let ((last (nthcdr (1- index) list)))
+        (setcdr last (cddr last))
+        list))))
 
 
 (provide 'achive-utils)
