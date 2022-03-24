@@ -225,11 +225,10 @@ FIELDS: list of field index."
   (format "%dW" (/ (string-to-number (nth 10 list)) 10000)))
 
 
-(defun achive-handle-request (codes &optional callback)
+(defun achive-handle-request (&optional callback)
   "Handle request by stock code list.
-CODES: list of stock code.
 CALLBACK: after the rendering."
-  (achive-request (achive-make-request-url achive-api codes)
+  (achive-request (achive-make-request-url achive-api (append achive-index-list achive-stocks))
                   (lambda ()
                     (let ((resp-str (achive-parse-response))
                           indexs stocks)
@@ -245,13 +244,13 @@ CALLBACK: after the rendering."
                           (funcall callback))))))
 
 
-(defun achive-should-refresh ()
+(defun achive-should-refresh-p ()
   "Current should be refresh.
 If at 9:00 - 11:30 or 13:00 - 15:00 on weekdays and visual buffer is existing,
 return t. Otherwise, return nil."
   (let ((week (format-time-string "%w"))
         should)
-    (if (get-buffer achive-buffer-name)
+    (if (get-buffer-window achive-buffer-name)
         (unless (or (string= week "0") (string= week "6"))
           (setq should
                 (or (and (not (achive-compare-time "9:00")) (achive-compare-time "11:30"))
@@ -320,13 +319,14 @@ Insert string of TIME, INDEXS and STOCKS."
       (goto-char achive-prev-point))))
 
 
-(defun achive-handle-auto-refresh (codes)
-  "Automatic refresh.
-CODES: list of stock code."
-  (if (achive-should-refresh)
+(defun achive-handle-auto-refresh ()
+  "Automatic refresh."
+  (if (get-buffer achive-buffer-name)
       (achive-set-timeout (lambda ()
-                            (achive-handle-request codes (lambda ()
-                                                           (achive-handle-auto-refresh codes))))
+                            (if (achive-should-refresh-p)
+                                (achive-handle-request (lambda ()
+                                                         (achive-handle-auto-refresh)))
+                              (achive-handle-auto-refresh)))
                           achive-refresh-seconds)))
 
 
@@ -347,9 +347,9 @@ CODES: list of stock code."
   (interactive)
   (when (achive-switch-visual)
     (achive-init)
-    (achive-handle-request achive-stocks)
+    (achive-handle-request)
     (if achive-auto-refresh
-        (achive-handle-auto-refresh achive-stocks))))
+        (achive-handle-auto-refresh))))
 
 
 ;;;###autoload
@@ -358,7 +358,7 @@ CODES: list of stock code."
   (interactive)
   (let ((name (buffer-name)))
     (when (string= achive-buffer-name name)
-      (achive-handle-request achive-stocks)
+      (achive-handle-request)
       (message "Achive has been refreshed."))
 
     (when (string= achive-search-buffer-name name)
@@ -378,7 +378,7 @@ CODES: list of stock code."
 (defun achive-search (codes)
   "Search stock by codes.
 CODES: string of stocks list."
-  (interactive "sPlease input code: ")
+  (interactive "sPlease input code to search: ")
 
   (setq achive-search-codes (split-string codes))
   (achive-create-visual achive-search-buffer-name)
@@ -390,12 +390,12 @@ CODES: string of stocks list."
 (defun achive-add (codes)
   "Add stocks by codes.
 CODES: string of stocks list."
-  (interactive "sPlease input code: ")
+  (interactive "sPlease input code to add: ")
   (setq codes (split-string codes))
   (when codes
     (setq achive-stocks (append achive-stocks codes))
     (achive-writecache achive-cache-path achive-stocks)
-    (achive-handle-request achive-stocks)
+    (achive-handle-request)
     (message "[%s] have been added." codes)))
 
 
@@ -414,7 +414,7 @@ CODES: string of stocks list."
     (when index
       (setq achive-stocks (achive-remove-nth-element achive-stocks index))
       (achive-writecache achive-cache-path achive-stocks)
-      (achive-handle-request achive-stocks)
+      (achive-handle-request)
       (message "<%s> have been removed." code))))
 
 ;;;;; mode
