@@ -420,7 +420,7 @@ CODES: string of stocks list."
 ;;;;; mode
 
 (define-derived-mode achive-visual-mode org-mode
-  "Major mode for achive stocks view."
+  "Achive"
   :group 'achive
   (buffer-disable-undo)
   (setq truncate-lines t
