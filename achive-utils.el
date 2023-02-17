@@ -152,28 +152,8 @@ CODES: list of stock codes."
     (prin1 codes (current-buffer))))
 
 
-(defun achive-list-included-p (list target &optional equal which)
-  "Whether TARGET is included in LIST, and return index or nil.
-WHICH is a `nth' function to LIST."
-  (unless equal
-    (setq equal (lambda (a b) (= a b))))
-
-  (unless which
-    (setq which (lambda (v) v)))
-  
-  (cl-loop with i = 0
-           for v in list
-           if (funcall equal
-                       (funcall which v)
-                       target)
-           return i
-           else
-           do (cl-incf i)
-           finally return nil))
-
-
 (defun achive-remove-nth-element (list index)
-  "Remove list element by index."
+  "Remove LIST element by INDEX."
   (if (< (length list) (1+ index))
       nil
     (if (zerop index) (cdr list)

@@ -69,8 +69,8 @@
   "Displayed language."
   :group 'achive
   :type '(choice
-          (const :tag "English" 'en)
-          (const :tag "中文" 'zh)))
+          (const :tag "English" en)
+          (const :tag "中文" zh)))
 
 (defcustom achive-index-list '("sh000001" "sz399001" "sz399006")
   "List of composite index."
@@ -164,7 +164,7 @@ CALLBACK: function of after response."
 (defun achive-parse-response ()
   "Parse sina http response result by body."
   (if (/= 200 url-http-response-status)
-      (error "Internal Server Error."))
+      (error "Internal Server Error"))
   (let ((resp-gbcode (with-current-buffer (current-buffer)
                        (buffer-substring-no-properties (search-forward "\n\n") (point-max)))))
     (decode-coding-string resp-gbcode 'gb18030)))
@@ -290,8 +290,8 @@ BUFFER-NAME: buffer name of major mode."
 
 
 (cl-defun achive-visual-render (&key buffer-name indexs stocks search)
-  "Render stocks list by BUFFER-NAME. 
-Insert string of TIME, INDEXS and STOCKS."
+  "Render stocks list by BUFFER-NAME.
+Insert string of TIME, INDEXS, STOCKS and SEARCH."
   (with-current-buffer (get-buffer buffer-name)
     (let ((inhibit-read-only t))
       (setq achive-prev-point (point))
@@ -310,7 +310,7 @@ Insert string of TIME, INDEXS and STOCKS."
         (insert (achive-text-local achive-stocks-header achive-language))
         (insert stocks))
 
-      (when (stringp search)  
+      (when (stringp search)
         (insert "\n" (achive-text-local achive-search-title achive-language) "\n")
         (insert (achive-text-local achive-stocks-header achive-language))
         (insert search))
@@ -410,7 +410,8 @@ CODES: string of stocks list."
                                 nil
                                 nil
                                 nil))
-         (index (achive-list-included-p achive-stocks code (lambda (a b) (string= a b)))))
+         (index (cl-position code achive-stocks :test 'equal)))
+    
     (when index
       (setq achive-stocks (achive-remove-nth-element achive-stocks index))
       (achive-writecache achive-cache-path achive-stocks)
