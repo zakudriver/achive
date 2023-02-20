@@ -295,7 +295,7 @@ Insert string of TIME, INDEXS, STOCKS and SEARCH."
   (let* ((inhibit-read-only t)
          (buffer (get-buffer buffer-name))
          (make-point (eq buffer
-                              (window-buffer (selected-window)))))
+                         (window-buffer (selected-window)))))
     (with-current-buffer buffer
       (if make-point
           (setq achive-prev-point (point)))
