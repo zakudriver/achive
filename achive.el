@@ -292,9 +292,14 @@ BUFFER-NAME: buffer name of major mode."
 (cl-defun achive-visual-render (&key buffer-name indexs stocks search)
   "Render stocks list by BUFFER-NAME.
 Insert string of TIME, INDEXS, STOCKS and SEARCH."
-  (with-current-buffer (get-buffer buffer-name)
-    (let ((inhibit-read-only t))
-      (setq achive-prev-point (point))
+  (let* ((inhibit-read-only t)
+         (buffer (get-buffer buffer-name))
+         (make-point (eq buffer
+                              (window-buffer (selected-window)))))
+    (with-current-buffer buffer
+      (if make-point
+          (setq achive-prev-point (point)))
+      
       (erase-buffer)
 
       ;; (achive-visual-mode)
@@ -302,7 +307,7 @@ Insert string of TIME, INDEXS, STOCKS and SEARCH."
 
       (when (and achive-display-indexs (stringp indexs))
         (insert (achive-text-local achive-index-title achive-language) "\n")
-        (insert (achive-text-local achive-stocks-header achive-language))
+        
         (insert indexs))
       
       (when (stringp stocks)
@@ -316,7 +321,9 @@ Insert string of TIME, INDEXS, STOCKS and SEARCH."
         (insert search))
 
       (org-table-map-tables 'org-table-align t)
-      (goto-char achive-prev-point))))
+
+      (if make-point
+          (goto-char achive-prev-point)))))
 
 
 (defun achive-handle-auto-refresh ()
