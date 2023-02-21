@@ -307,7 +307,7 @@ Insert string of TIME, INDEXS, STOCKS and SEARCH."
 
       (when (and achive-display-indexs (stringp indexs))
         (insert (achive-text-local achive-index-title achive-language) "\n")
-        
+        (insert (achive-text-local achive-stocks-header achive-language))
         (insert indexs))
       
       (when (stringp stocks)
