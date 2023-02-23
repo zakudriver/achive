@@ -38,7 +38,8 @@
 (require 'achive-utils)
 
 
-(defvar url-http-response-status)
+(defvar url-http-response-status 0)
+
 
 ;;;; Customization
 
