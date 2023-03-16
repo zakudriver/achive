@@ -34,7 +34,6 @@
 
 (require 'cl-lib)
 (require 'url)
-(require 'org-table)
 (require 'achive-utils)
 
 
