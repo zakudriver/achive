@@ -36,39 +36,6 @@
 (require 'cl-lib)
 
 
-(defun achive-matchs-to-list (reg string)
-  "Get a list of all REG matche string in a STRING."
-  (save-match-data
-    (let ((pos 0)
-          matches)
-      (while (string-match reg string pos)
-        (push (match-string 1 string) matches)
-        (setq pos (match-end 0)))
-      matches)))
-
-
-(defun achive-text-local (texts lang)
-  "Choice text by language.
-TEXTS: list of string.
-LANG: symbol of language type."
-  ;; (let* ((langs '(en zh))
-  ;;        (index (cl-position lang langs :test 'equal)))
-  ;;   (nth index texts))
-  (if (eq lang 'en)
-      (car texts)
-    (car (cdr texts))))
-
-
-(defun achive-format-time-local (lang)
-  "Generate time of localized.
-LANG: symbol of language type."
-  (if (eq lang 'en)
-      (format-time-string "%H:%M:%S %A %d-%m-%G")
-    (let ((weeks '("日" "一" "二" "三" "四" "五" "六"))
-          (week-index (string-to-number (format-time-string "%w"))))
-      (format "%s 星期%s" (format-time-string "%G-%m-%d %H:%M:%S") (nth week-index weeks)))))
-
-
 (defun achive-make-percent (price yestclose)
   "Get stocks percent by (PRICE - YESTCLOSE) / yestclose.
 Return '+-xx%'"
