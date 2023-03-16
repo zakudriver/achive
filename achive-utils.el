@@ -1,9 +1,9 @@
 ;;; achive-utils.el --- Extend for achive  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2017 dingansich_kum0
+;; Copyright (C) 2017 zakudriver
 
-;; Author: dingansich_kum0 <zy.hua1122@outlook.com>
-;; URL: https://github.com/dingansichKum0/achive
+;; Author: zakudriver <zy.hua1122@gmail.com>
+;; URL: https://github.com/zakudriver/achive
 ;; Version: 1.0
 ;; Package-Requires: ((emacs "25.2"))
 ;; Keywords: tools
@@ -89,7 +89,7 @@ SECONDS: integer of seconds."
   `(let ((timer))
      (setq timer (run-with-timer ,seconds nil (lambda ()
                                                 (cancel-timer timer)
-                                                (funcall ,callback))))))
+                                                (funcall ,callback timer))))))
 
 
 (defun achive-time-list-index (word)
@@ -160,6 +160,48 @@ CODES: list of stock codes."
       (let ((last (nthcdr (1- index) list)))
         (setcdr last (cddr last))
         list))))
+
+
+(defun achive-make-name (list _fields)
+  "Make stock name by decode `gb18030'.
+LIST: list of a stock value.
+FIELDS: list of field index."
+  (decode-coding-string (nth 1 list) 'gb18030))
+
+
+(defun achive-make-change-percent (list fields)
+  "Call function `achive-make-percent' to make `change-percent'.
+LIST: list of a stock value.
+FIELDS: list of field index."
+  (achive-make-percent (string-to-number (nth (cdr (assoc 'price fields)) list))
+                       (string-to-number (nth (cdr (assoc 'yestclose fields)) list))))
+
+
+(defun achive-make-volume (list _fields)
+  "Get volume of display, current volume / 100.
+LIST: list of a stock value.
+FIELDS: list of field index."
+  (number-to-string (/ (string-to-number (nth 9 list)) 100)))
+
+
+(defun achive-make-turn-volume (list _fields)
+  "Get turn-volume of display, current turn-volume / 10000, unit W (10000).
+LIST: list of a stock value.
+FIELDS: list of field index."
+  (format "%dW" (/ (string-to-number (nth 10 list)) 10000)))
+
+
+(defmacro achive-number-sort (index)
+  "Create value of number sorting by INDEX."
+  `(lambda (a b)
+     (let ((get-percent-number (lambda (arg)
+                                 (string-to-number (aref (cadr arg) ,index)))))
+       (> (funcall get-percent-number a) (funcall get-percent-number b)))))
+
+
+(defun achive-invalid-entry-p (entry)
+  "Check ENTRY data of invalid."
+  (string= (aref (cadr entry) 1) "-"))
 
 
 (provide 'achive-utils)

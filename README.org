@@ -20,35 +20,32 @@ Download el file to your load-path.
     :load-path "~/.emacs.d/site-lisp/achive"
     :bind
     ("C-c a a" . achive)
-    ("C-c a g" . achive-refresh)
     :custom
     (achive-auto-refresh t)
     (achive-refresh-seconds 5)
-    (achive-language 'zh)
     (achive-stock-list '("sh600036" "sh601012" "sz000625" "sz002050" "sz002013" "sh600176")))
 #+END_SRC
 
 * Customization
-| Variable               | Default                                 | type                                                         | Description                        |
-|------------------------+-----------------------------------------+--------------------------------------------------------------+------------------------------------|
-| achive-stock-list      | '("sh600036" "sz000625")                | list                                                         | List of stocks.                    |
-| achive-buffer-name     | "*A Chive*"                               | string                                                       | Stocks buffer name.                |
-| achive-language        | 'en                                     | '(choice (const :tag "English" 'en) (const :tag "中文" 'zh)) | Displayed language.                |
-| achive-index-list      | '("sh000001" "sz399001" "sz399006")     | list                                                         | List of composite index.           |
-| achive-auto-refresh    | t                                       | boolean                                                      | Whether to refresh automatically.  |
-| achive-refresh-seconds | 5                                       | integer                                                      | Seconds of automatic refresh time. |
-| achive-display-indexs  | t                                       | boolean                                                      | Whether to show indexs.            |
-| achive-cache-path      | (concat user-emacs-directory ".achive") | string                                                       | Path of cache.                     |
+| Variable                  | Default                                 | type    | Description                                                                             |
+|---------------------------+-----------------------------------------+---------+-----------------------------------------------------------------------------------------|
+| achive-index-list         | '("sh000001" "sz399001" "sz399006")     | list    | List of composite index.                                                                |
+| achive-stock-list         | '("sh600036" "sz000625")                | list    | List of stocks.                                                                         |
+| achive-buffer-name        | "*A Chive*"                               | string  | Buffer name of achive board.                                                            |
+| achive-search-buffer-name | "*A Chive - results -*"                   | string  | Buffer name of achive search board.                                                     |
+| achive-auto-refresh       | t                                       | boolean | Whether to refresh automatically.                                                       |
+| achive-refresh-seconds    | 5                                       | integer | Seconds of automatic refresh time.                                                      |
+| achive-cache-path         | (concat user-emacs-directory ".achive") | string  | Path of cache.                                                                          |
+| achive-colouring          | t                                       | boolean | Whether to apply face. If it's nil will be low-key, you can peek at it at company time. |
 
 * Command
 | Command        | Description                                |
 |----------------+--------------------------------------------|
 | achive         | Launch achive and switch to visual buffer. |
 | achive-refresh | Manual refresh and render.                 |
-| achive-exit    | Exit achive.                               |
 | achive-search  | Search stocks by codes.                    |
-| achive-add     | Add stocks by codes                        |
-| achive-remove  | Remove stocks.                             |
+| achive-add     | Add favorite stocks by codes               |
+| achive-remove  | Remove favorite stocks.                    |
 
 * For traders
 #+BEGIN_QUOTE
