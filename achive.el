@@ -441,7 +441,7 @@ CODES: string of stocks list."
   (setq tabulated-list-format achive-visual-columns)
   (setq tabulated-list-padding 2)
   (setq tabulated-list-sort-key nil)
-  (add-hook 'tabulated-list-revert-hook 'achive-refresh nil t)  
+  (add-hook 'tabulated-list-revert-hook 'achive-refresh nil t)
   (tabulated-list-init-header)
   (tablist-minor-mode))
 
