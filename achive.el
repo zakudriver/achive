@@ -127,27 +127,6 @@ If it's nil will be low-key, you can peek at it at company time."
   "Stocks Api.")
 
 
-(defconst achive-stocks-header '("|-\n| code | name | price | percent | high | low | volume | turn-volume | open | yestclose |\n|-\n" "|-\n| 股票代码 | 名称 | 当前价 | 涨跌幅 | 最高价 | 最低价 | 成交量 | 成交额 | 开盘价 | 昨日收盘价 |\n|-\n")
-  "Stocks list headern.")
-
-
-(defconst achive-index-title '("** Composite Index" "** 大盘指数")
-  "Stocks index title.")
-
-
-(defconst achive-stocks-title '("** Individual Stocks" "** 个股")
-  "Stocks list title.")
-
-
-(defconst achive-search-title '("** Results" "** 结果")
-  "Search list title.")
-
-
-(defconst achive-visual-table-row-format
-  "| %s | %s | %s | %s | %s | %s | %s | %s | %s | %s |\n|-\n"
-  "Stock-Tracker result item format.")
-
-
 (defconst achive-field-index-list
   '((code . 0) (name . achive-make-name) (price . 4) (change-percent . achive-make-change-percent)
     (high . 5) (low . 6) (volume . achive-make-volume) (turn-volume . achive-make-turn-volume) (open . 2) (yestclose . 3))
