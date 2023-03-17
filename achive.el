@@ -227,7 +227,7 @@ ROW-STR: string of row."
   (achive-request (achive-make-request-url achive-api codes)
                   (lambda ()
                     (funcall callback (seq-filter
-                                       (lambda (arg) (not (achive-invalid-entry-p arg)))
+                                       #'achive-valid-entry-p
                                        (achive-format-content codes (achive-parse-response)))))))
 
 
@@ -259,20 +259,9 @@ CALLBACK: callback function after the rendering."
       (achive-render-request achive-search-buffer-name achive-search-codes)))
 
 
-(defun achive-should-refresh-p ()
-  "Now should be refresh.
-If at 9:00 - 11:30 or 13:00 - 15:00 and visual buffer is existing,
-return t. Otherwise, return nil."
-  (if (get-buffer-window achive-buffer-name)
-      (or (and (not (achive-compare-time "9:00")) (achive-compare-time "11:30"))
-          (and (not (achive-compare-time "13:00")) (achive-compare-time "15:00")))
-    nil))
-
-
-(defun achive-weekday-p ()
-  "Whether it is weekend or not."
-  (let ((week (format-time-string "%w")))
-    (not (or (string= week "0") (string= week "6")))))
+(defun achive-timer-alive-p ()
+  "Check that the timer is alive."
+  (get-buffer achive-buffer-name))
 
 
 (defun achive-switch-visual (buffer-name)
@@ -284,7 +273,7 @@ return t. Otherwise, return nil."
 (defun achive-loop-refresh (_timer)
   "Loop to refresh."
   (if (and (achive-timer-alive-p) (achive-weekday-p))
-      (if (achive-should-refresh-p)
+      (if (achive-working-time-p achive-buffer-name)
           (achive-render-request achive-buffer-name
                                  (append achive-index-list achive-stocks)
                                  (lambda (_resp)
@@ -327,9 +316,6 @@ return t. Otherwise, return nil."
     entry))
 
 
-(defun achive-timer-alive-p ()
-  "Check that the timer is alive."
-  (get-buffer achive-buffer-name))
 
 ;;;;; interactive
 
@@ -373,13 +359,14 @@ CODES: string of stocks list."
 CODES: string of stocks list."
   (interactive "sPlease input code to add: ")
   (setq codes (split-string codes))
-
   (achive-validate-request codes (lambda (resp)
-                                   (setq codes (mapcar (apply-partially #'car) resp))
+                                   (setq codes (mapcar #'car resp))
+                                   
                                    (when codes
                                      (setq achive-stocks (append achive-stocks codes))
                                      (achive-writecache achive-cache-path achive-stocks)
-                                     (achive-render-request achive-buffer-name (append achive-index-list achive-stocks)
+                                     (achive-render-request achive-buffer-name
+                                                            (append achive-index-list achive-stocks)
                                                             (lambda (_resp)
                                                               (message "[%s] have been added."
                                                                        (mapconcat 'identity codes ", "))))))))

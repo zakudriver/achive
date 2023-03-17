@@ -166,9 +166,26 @@ FIELDS: list of field index."
        (> (funcall get-percent-number a) (funcall get-percent-number b)))))
 
 
-(defun achive-invalid-entry-p (entry)
-  "Check ENTRY data of invalid."
-  (string= (aref (cadr entry) 1) "-"))
+(defun achive-valid-entry-p (entry)
+  "Check ENTRY data of valid."
+  (not (string= (aref (cadr entry) 1) "-")))
+
+
+(defun achive-working-time-p (buffer-name)
+  "Whether it is working time or not.
+If at 9:00 - 11:30 or 13:00 - 15:00 and visual buffer named
+BUFFER-NAME is existing,
+return t. Otherwise, return nil."
+  (if (get-buffer-window buffer-name)
+      (or (and (not (achive-compare-time "9:00")) (achive-compare-time "11:30"))
+          (and (not (achive-compare-time "13:00")) (achive-compare-time "15:00")))
+    nil))
+
+
+(defun achive-weekday-p ()
+  "Whether it is weekend or not."
+  (let ((week (format-time-string "%w")))
+    (not (or (string= week "0") (string= week "6")))))
 
 
 (provide 'achive-utils)
