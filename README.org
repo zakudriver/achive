@@ -39,13 +39,14 @@ Download el file to your load-path.
 | achive-colouring          | t                                       | boolean | Whether to apply face. If it's nil will be low-key, you can peek at it at company time. |
 
 * Command
-| Command        | Description                                |
-|----------------+--------------------------------------------|
-| achive         | Launch achive and switch to visual buffer. |
-| achive-refresh | Manual refresh and render.                 |
-| achive-search  | Search stocks by codes.                    |
-| achive-add     | Add favorite stocks by codes               |
-| achive-remove  | Remove favorite stocks.                    |
+| Command                 | Description                                          |
+|-------------------------+------------------------------------------------------|
+| achive                  | Launch achive and switch to visual buffer.           |
+| achive-refresh          | Manual refresh and render.                           |
+| achive-search           | Search stocks by codes.                              |
+| achive-add              | Add favorite stocks by codes                         |
+| achive-remove           | Remove favorite stocks.                              |
+| achive-switch-colouring | Manual switch colouring. It's handy for emergencies. |
 
 * For traders
 #+BEGIN_QUOTE

@@ -188,6 +188,13 @@ return t. Otherwise, return nil."
     (not (or (string= week "0") (string= week "6")))))
 
 
+(defun achive-remove-face (faced)
+  "Remove face for FACED to extract text."
+  (let* ((end (length faced)))
+    (set-text-properties 0 end nil faced)
+    faced))
+
+
 (provide 'achive-utils)
 
 ;;; achive-utils.el ends here

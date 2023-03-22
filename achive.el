@@ -162,6 +162,10 @@ If it's nil will be low-key, you can peek at it at company time."
 (defvar achive-pop-to-buffer-action nil
   "Action to use internally when `pop-to-buffer' is called.")
 
+
+(defvar achive-entry-list nil
+  "Cache data for manual render.")
+
 ;;;;; functions
 
 (defun achive-make-request-url (api parameter)
@@ -232,23 +236,34 @@ ROW-STR: string of row."
 
 
 (defun achive-render-request (buffer-name codes &optional callback)
-  "Handle request by stock CODES, and rendder buffer of BUFFER-NAME.
+  "Handle request by stock CODES, and render buffer of BUFFER-NAME.
 CALLBACK: callback function after the rendering."
   (achive-request (achive-make-request-url achive-api codes)
                   (lambda ()
-                    (let ((formated-resp
-                           (achive-format-content codes (achive-parse-response))))
+                    (setq achive-entry-list (achive-format-content codes
+                                                                   (achive-parse-response)))
+                    (achive-render buffer-name)
+                    
+                    (if (functionp callback)
+                        (funcall callback achive-entry-list)))))
 
 
-                      (with-current-buffer buffer-name
-                        (setq tabulated-list-entries (if achive-colouring
-                                                         (mapcar #'achive-propertize-face
-                                                                 formated-resp)
-                                                       formated-resp))
-                        (tabulated-list-print t))
+(defun achive-render (buffer-name &optional manual)
+  "Render visual buffer of BUFFER-NAME.
+If MANUAL is t and `achive-colouring' is nil,
+entry will remove face before render."
+  (let ((entries (if achive-colouring
+                     (mapcar #'achive-propertize-entry-face
+                             achive-entry-list)
+                   achive-entry-list)))
 
-                      (if (functionp callback)
-                          (funcall callback formated-resp))))))
+    (if (and manual (not achive-colouring))
+        (setq entries (mapcar #'achive-remove-entry-face
+                              achive-entry-list)))
+    
+    (with-current-buffer buffer-name
+      (setq tabulated-list-entries entries)
+      (tabulated-list-print t t))))
 
 
 (defun achive-refresh ()
@@ -296,7 +311,7 @@ CALLBACK: callback function after the rendering."
     (setq achive-stocks cache)))
 
 
-(defun achive-propertize-face (entry)
+(defun achive-propertize-entry-face (entry)
   "Propertize ENTRY."
   (let* ((id (car entry))
          (data (cadr entry))
@@ -316,6 +331,16 @@ CALLBACK: callback function after the rendering."
     entry))
 
 
+(defun achive-remove-entry-face (entry)
+  "Remove ENTRY properties."
+  (let* ((id (car entry))
+         (data (cadr entry)))
+    (when (cl-position id achive-index-list :test 'string=)
+      (achive-remove-face (aref data 0))
+      (achive-remove-face (aref data 1)))
+
+    (achive-remove-face (aref data 3))
+    entry))
 
 ;;;;; interactive
 
@@ -391,12 +416,21 @@ CODES: string of stocks list."
                              (lambda (_resp)
                                (message "<%s> have been removed." code))))))
 
+
+;;;###autoload
+(defun achive-switch-colouring ()
+  "Manual switch colouring. It's handy for emergencies."
+  (interactive)
+  (setq achive-colouring (not achive-colouring))
+  (achive-render (buffer-name) t))
+
 ;;;;; mode
 
 (defvar achive-visual-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map "+" 'achive-add)
     (define-key map "_" 'achive-remove)
+    (define-key map "c" 'achive-switch-colouring)
     map)
   "Keymap for `achive-visual-mode'.")
 
@@ -404,7 +438,6 @@ CODES: string of stocks list."
 (define-derived-mode achive-visual-mode tabulated-list-mode "Achive"
   "Major mode for avhice real-time board."
   (setq tabulated-list-format achive-visual-columns)
-  (setq tabulated-list-padding 2)
   (setq tabulated-list-sort-key nil)
   (add-hook 'tabulated-list-revert-hook 'achive-refresh nil t)
   (tabulated-list-init-header)
