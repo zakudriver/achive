@@ -190,7 +190,7 @@ return t. Otherwise, return nil."
 
 (defun achive-remove-face (faced)
   "Remove face for FACED to extract text."
-  (let* ((end (length faced)))
+  (let ((end (length faced)))
     (set-text-properties 0 end nil faced)
     faced))
 
