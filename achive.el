@@ -218,7 +218,7 @@ Return index and stocks data."
   "Format row content.
 ROW-STR: string of row."
   (let ((value-list (split-string row-str ",")))
-    (if (= 1 (length value-list))
+    (if (length= value-list 1)
         (append value-list (make-list 9 "-"))
       (cl-loop for (_k . v) in achive-field-index-list
                collect (if (functionp v)
@@ -242,6 +242,7 @@ CALLBACK: callback function after the rendering."
                   (lambda ()
                     (setq achive-entry-list (achive-format-content codes
                                                                    (achive-parse-response)))
+                    (print achive-entry-list)
                     (achive-render buffer-name)
                     
                     (if (functionp callback)
@@ -477,5 +478,11 @@ CODES: string of stocks list."
 ;; var hq_str_sh000001=\"上证指数,3261.9219,3268.6955,3245.3123,3262.0025,3216.9927,0,0,319906033,409976276121,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2023-03-14,15:30:39,00,\"
 
 ;; ("sh000001" "上证指数" "3245.3123" "-0.72%" "3262.0025" "3216.9927" 3199060 "40997627W" "3261.9219" "3268.6955")
+
+;; var hq_str_sh603866=\"桃李面包,0.000,15.250,15.250,0.000,0.000,0.000,0.000,0,0.000,0,0.000,0,0.000,0,0.000,0,0.000,0,0.000,0,0.000,0,0.000,0,0.000,0,0.000,0,0.000,2023-03-27,09:11:30,00,\"
+
+;; var hq_str_sh603866=\"桃李面包,0.000,15.250,15.250,0.000,0.000,15.110,15.110,0,0.000,5100,15.110,2000,0.000,0,0.000,0,0.000,0,0.000,5100,15.110,0,0.000,0,0.000,0,0.000,0,0.000,2023-03-27,09:16:00,00,\"
+
+;; ("sh603866" ["sh603866" "桃李面包" "15.250" "0.00%" "0.000" "0.000" "0" "0W" "0.000" "15.250"])
 
 ;; http://image.sinajs.cn/newchart/daily/n/sh601006.gif
