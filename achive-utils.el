@@ -36,17 +36,19 @@
 (require 'cl-lib)
 
 
-(defun achive-make-percent (price yestclose)
-  "Get stocks percent by (PRICE - YESTCLOSE) / yestclose.
-Return '+-xx%'"
-  (unless (floatp price)
-    (setq price (float price)))
-  (unless (floatp yestclose)
-    (setq yestclose (float yestclose)))
-  (if (= yestclose 0.0)
-      (setq yestclose 1.0))
-  (let ((result (/ (- price yestclose) yestclose)))
-    (format "%s%0.2f%%" (if (> result 0) "+" "") (* result 100))))
+(defun achive-make-percent (price yestclose open)
+  "Get stocks percent by (PRICE - YESTCLOSE) / YESTCLOSE, Return \"+/- xx%\".
+If OPEN is \"0.00\", percent just is 0.00%."
+  (if (zerop open)
+      "0.00%"
+    (unless (floatp price)
+      (setq price (float price)))
+    (unless (floatp yestclose)
+      (setq yestclose (float yestclose)))
+    (let ((result (/ (- price yestclose)
+                     (if (zerop yestclose)
+                         1.0 yestclose))))
+      (format "%s%0.2f%%" (if (> result 0) "+" "") (* result 100)))))
 
 
 (defmacro achive-set-timeout (callback seconds)
@@ -141,7 +143,8 @@ FIELDS: list of field index."
 LIST: list of a stock value.
 FIELDS: list of field index."
   (achive-make-percent (string-to-number (nth (cdr (assoc 'price fields)) list))
-                       (string-to-number (nth (cdr (assoc 'yestclose fields)) list))))
+                       (string-to-number (nth (cdr (assoc 'yestclose fields)) list))
+                       (string-to-number (nth (cdr (assoc 'open fields)) list))))
 
 
 (defun achive-make-volume (list _fields)
