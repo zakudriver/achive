@@ -242,6 +242,7 @@ CALLBACK: callback function after the rendering."
                   (lambda ()
                     (setq achive-entry-list (achive-format-content codes
                                                                    (achive-parse-response)))
+                    (print achive-entry-list)
                     (achive-render buffer-name)
                     
                     (if (functionp callback)
